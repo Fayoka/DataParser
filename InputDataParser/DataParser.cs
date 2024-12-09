@@ -1,14 +1,15 @@
-using System;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace InputDataParser
 {
     public static class DataParser
     {
-        public static int PromptForInteger(string prompt, bool displayErrorMessages = true)
+        public static int PromptForInteger(string prompt, string errorMessage = "Please enter a valid integer.", bool displayErrorMessages = true)
         {
             while (true)
             {
+                Console.WriteLine(prompt);
                 string input = ReadLineSafe();
 
                 if (int.TryParse(input, out int result))
@@ -16,15 +17,16 @@ namespace InputDataParser
 
                 if (displayErrorMessages)
                 {
-                    Console.WriteLine("Please enter a valid integer.");
+                    Console.WriteLine(errorMessage);
                 }
             }
         }
 
-        public static double PromptForDouble(string prompt, bool displayErrorMessages = true)
+        public static double PromptForDouble(string prompt, string errorMessage = "Please enter a valid double.", bool displayErrorMessages = true)
         {
             while (true)
             {
+                Console.WriteLine(prompt);
                 string input = ReadLineSafe();
 
                 if (double.TryParse(input, out double result))
@@ -32,15 +34,16 @@ namespace InputDataParser
 
                 if (displayErrorMessages)
                 {
-                    Console.WriteLine("Please enter a valid double.");
+                    Console.WriteLine(errorMessage);
                 }
             }
         }
 
-        public static string PromptForNonEmptyString(string prompt, bool displayErrorMessages = true)
+        public static string PromptForNonEmptyString(string prompt, string errorMessage = "Input cannot be empty.", bool displayErrorMessages = true)
         {
             while (true)
             {
+                Console.WriteLine(prompt);
                 string input = ReadLineSafe();
 
                 if (!string.IsNullOrWhiteSpace(input))
@@ -48,14 +51,14 @@ namespace InputDataParser
 
                 if (displayErrorMessages)
                 {
-                    Console.WriteLine("Input cannot be empty.");
+                    Console.WriteLine(errorMessage);
                 }
             }
         }
 
-        public static DateTime PromptForFlexibleDate(string prompt, bool displayErrorMessages = true)
+        public static DateTime PromptForFlexibleDate(string prompt, string[] acceptedFormats = null, bool displayErrorMessages = true)
         {
-            string[] acceptedFormats = {
+            acceptedFormats ??= new string[] {
                 "dd/MM/yyyy", "dd-MM-yyyy", "dd.MM.yyyy",
                 "ddMMyyyy", "dd MM yyyy",
                 "d/M/yy", "d-M-yy", "d.M.yy",
@@ -64,6 +67,7 @@ namespace InputDataParser
 
             while (true)
             {
+                Console.WriteLine(prompt);
                 string input = ReadLineSafe();
 
                 if (DateTime.TryParseExact(input, acceptedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result))
@@ -71,12 +75,56 @@ namespace InputDataParser
 
                 if (displayErrorMessages)
                 {
-                    Console.WriteLine("Please enter a valid date.");
+                    Console.WriteLine($"Invalid date. Please enter a date in one of the following formats: {string.Join(", ", acceptedFormats)}");
                 }
             }
         }
 
-        private static string ReadLineSafe()
+        public static string PromptForStringWithTimeout(string prompt, int timeoutSeconds = 30, string timeoutMessage = "Input timed out.")
+        {
+            DateTime startTime = DateTime.Now;
+            string? input = null;
+
+            Console.WriteLine(prompt);
+
+            while ((DateTime.Now - startTime).TotalSeconds < timeoutSeconds)
+            {
+                if (Console.KeyAvailable)
+                {
+                    input = Console.ReadLine()?.Trim();
+                    if (!string.IsNullOrWhiteSpace(input))
+                        return input;
+                }
+            }
+
+            Console.WriteLine(timeoutMessage);
+            return string.Empty;
+        }
+        public static string PromptForEmail(string prompt, string errorMessage = "Please enter a valid email address.", 
+            bool displayErrorMessages = true)
+        {
+            while (true)
+            {
+                Console.WriteLine(prompt);
+                string input = ReadLineSafe();
+
+                if (IsValidEmail(input))
+                    return input;
+
+                if (displayErrorMessages)
+                {
+                    Console.WriteLine(errorMessage);
+                }
+            }
+        }
+
+        private static bool IsValidEmail(string email)
+        {
+            var emailRegex = new Regex(@"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
+            return emailRegex.IsMatch(email);
+        }
+
+        public static string ReadLineSafe()
         {
             string? input = null;
             while (input == null)
