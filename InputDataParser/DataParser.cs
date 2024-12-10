@@ -79,6 +79,33 @@ namespace InputDataParser
                 }
             }
         }
+        
+        public static DateTime PromptForFlexibleDateOrDefaultDate(string prompt, string[] acceptedFormats = null, bool displayErrorMessages = true)
+        {
+            acceptedFormats ??= new string[] {
+                "dd/MM/yyyy", "dd-MM-yyyy", "dd.MM.yyyy",
+                "ddMMyyyy", "dd MM yyyy",
+                "d/M/yy", "d-M-yy", "d.M.yy",
+                "dMyy", "d M yy"
+            };
+
+            while (true)
+            {
+                Console.WriteLine(prompt);
+                string input = Console.ReadLine();
+                if (input == "")
+                    return DateTime.Today;
+                
+                if (DateTime.TryParseExact(input, acceptedFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result))
+                    return result;
+
+                if (displayErrorMessages)
+                {
+                    Console.WriteLine($"Invalid date. Please enter a date in one of the following formats: {string.Join(", ", acceptedFormats)}");
+                }
+            }
+        }
+        
 
         public static string PromptForStringWithTimeout(string prompt, int timeoutSeconds = 30, string timeoutMessage = "Input timed out.")
         {
